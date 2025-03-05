@@ -1,0 +1,102 @@
+import subprocess
+import sys
+import logging
+import tkinter as tk
+from tkinter import messagebox
+import speech_recognition as sr
+from tkinter import ttk
+import os
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+logger = logging.getLogger()
+
+# Function to install the requirements
+def install_requirements():
+    try:
+        import speech_recognition as sr
+        import tkinter as tk
+        import os
+    except ImportError as e:
+        logger.info(f"ImportError: {e}. Installing required packages...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "SpeechRecognition", "pyaudio", "tk", "os"])
+        logger.info("Installation complete.")
+        
+# Run the requirement installation function
+install_requirements()
+
+import speech_recognition as sr
+import tkinter as tk
+from tkinter import messagebox
+import os
+from tkinter import ttk
+
+# Function to handle speech recognition
+def recognize_speech(language="en-US"):
+    recognizer = sr.Recognizer()
+    
+    # Set up the microphone
+    with sr.Microphone() as source:
+        output_text.delete(1.0, tk.END)  # Clear previous text
+        output_text.insert(tk.END, "Please speak now...")
+        root.update()  # Update GUI to show the message
+        
+        # Adjust recognizer sensitivity to ambient noise
+        recognizer.adjust_for_ambient_noise(source)
+        logger.info("Microphone is listening for speech...")
+
+        try:
+            # Listen for the speech and show a progress indicator
+            audio = recognizer.listen(source)
+            progress_bar['value'] = 50  # Indicate audio is being processed
+            root.update_idletasks()
+            logger.info("Audio received, processing...")
+
+            # Recognize speech using Google Web Speech API
+            text = recognizer.recognize_google(audio, language=language)  # Use the selected language
+            
+            progress_bar['value'] = 100  # Indicate processing is complete
+            output_text.delete(1.0, tk.END)  # Clear any existing text
+            output_text.insert(tk.END, text)  # Show recognized text
+            logger.info("Speech recognized: %s", text)
+            
+        except sr.UnknownValueError:
+            progress_bar['value'] = 0  # Reset progress bar on error
+            output_text.delete(1.0, tk.END)
+            output_text.insert(tk.END, "Sorry, I could not understand the audio.")
+            logger.error("Could not understand the audio.")
+        except sr.RequestError as e:
+            progress_bar['value'] = 0  # Reset progress bar on error
+            output_text.delete(1.0, tk.END)
+            output_text.insert(tk.END, f"Error with the API request; {e}")
+            logger.error(f"API request error: {e}")
+
+# Create the main window
+root = tk.Tk()
+root.title("Speech-to-Text with Multilingual Support")
+
+# Set window size
+root.geometry("500x400")
+
+# Create a label
+label = tk.Label(root, text="Speech-to-Text", font=("Helvetica", 16))
+label.pack(pady=10)
+
+# Create a button to start recognition
+recognize_button = tk.Button(root, text="Start Listening", command=lambda: recognize_speech(language="en-US"), font=("Helvetica", 14))
+recognize_button.pack(pady=20)
+
+# Create a Text widget to display recognized speech
+output_text = tk.Text(root, height=5, width=50, wrap=tk.WORD, font=("Helvetica", 12))
+output_text.pack(pady=10)
+
+# Create a progress bar for showing audio processing
+progress_bar = ttk.Progressbar(root, orient="horizontal", length=200, mode="determinate")
+progress_bar.pack(pady=20)
+
+# Button to recognize speech in French
+recognize_button_fr = tk.Button(root, text="Start Listening (French)", command=lambda: recognize_speech(language="fr-FR"), font=("Helvetica", 14))
+recognize_button_fr.pack(pady=10)
+
+# Run the GUI loop
+root.mainloop()
