@@ -20,7 +20,7 @@ Usage
 Clone the Repository:
 
 Copier
-git clone https://github.com/yourusername/speech-to-text.git
+git clone 
 cd speech-to-text
 Run the Application:
 
